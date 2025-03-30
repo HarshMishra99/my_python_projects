@@ -1,0 +1,79 @@
+import pandas as pd
+import streamlit as st
+
+# Streamlit UI
+st.title("Upload Telecom Dataset")
+
+# File uploader
+uploaded_file = st.file_uploader("Upload your telecom dataset (CSV format)", type=["csv"])
+
+if uploaded_file is not None:
+    # Read CSV file
+    df = pd.read_csv(uploaded_file)
+    
+    # Show dataset preview
+    st.write("### Preview of Uploaded Data:")
+    st.dataframe(df.head())
+
+    # Display basic statistics
+    st.write("### Dataset Summary:")
+    st.write(df.describe())
+import pandas as pd
+import numpy as np
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load dataset
+df = pd.read_csv("telecom_fault_data.csv")
+
+# Split data into features and target
+X = df.drop(columns=["Fault"])  # Features
+y = df["Fault"]  # Target (0 = No Fault, 1 = Fault)
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+# Model evaluation
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Model Accuracy: {accuracy:.2f}")
+print(classification_report(y_test, y_pred))
+
+# Save model
+joblib.dump(model, "fault_detection_model.pkl")
+#Create app.py (Streamlit UI for Fault Detection)
+import streamlit as st
+import pandas as pd
+import joblib
+import numpy as np
+
+# Load trained model
+model = joblib.load("fault_detection_model.pkl")
+
+# Streamlit UI
+st.title("📡 AI-Based Fault Detection in Telecom Networks")
+
+st.sidebar.header("Enter Network Parameters")
+signal_strength = st.sidebar.slider("Signal Strength (dBm)", -120, -50, -85)
+packet_loss = st.sidebar.slider("Packet Loss (%)", 0, 10, 3)
+latency = st.sidebar.slider("Latency (ms)", 0, 50, 25)
+bandwidth_usage = st.sidebar.slider("Bandwidth Usage (Mbps)", 10, 100, 50)
+error_rate = st.sidebar.slider("Error Rate (%)", 0, 5, 1)
+
+# Predict Fault
+input_data = np.array([[signal_strength, packet_loss, latency, bandwidth_usage, error_rate]])
+prediction = model.predict(input_data)[0]
+
+# Show Result
+if prediction == 1:
+    st.error("Fault Detected in Network!")
+else:
+    st.success("Network is Stable.")
