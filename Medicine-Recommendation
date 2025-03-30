@@ -1,0 +1,60 @@
+import pandas as pd
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+
+# Load dataset
+df = pd.read_csv("medicine_dataset.csv")
+
+# Split data
+X = df.drop(columns=["Disease", "Medicine"])  # Features (symptoms)
+y = df["Disease"]  # Target
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Save model
+joblib.dump(model, "medicine_model.pkl")
+print("Model saved as medicine_model.pkl")
+import streamlit as st
+import pandas as pd
+import joblib
+import numpy as np
+
+# Load trained model
+model = joblib.load("medicine_model.pkl")
+df = pd.read_csv("medicine_dataset.csv")
+
+# Streamlit UI
+st.title(" AI-Based Medicine Recommendation System")
+
+# User inputs symptoms
+st.sidebar.header("Select Your Symptoms")
+symptom1 = st.sidebar.selectbox("Symptom 1", df.columns[:-2])
+symptom2 = st.sidebar.selectbox("Symptom 2", df.columns[:-2])
+symptom3 = st.sidebar.selectbox("Symptom 3", df.columns[:-2])
+
+# Predict Disease
+input_data = np.array([[df[symptom1].mean(), df[symptom2].mean(), df[symptom3].mean()]])
+predicted_disease = model.predict(input_data)[0]
+
+# Recommend Medicine
+recommended_medicine = df[df["Disease"] == predicted_disease]["Medicine"].values[0]
+
+# Show Results
+st.write(f"### Predicted Disease: **{predicted_disease}**")
+st.write(f"### Recommended Medicine: **{recommended_medicine}**")
+
+
+
+
+#Sample Data
+Fever,Cough,Headache,Body_Pain,Disease,Medicine
+1,1,0,0,Cold,Paracetamol
+1,1,1,0,Flu,Ibuprofen
+1,0,1,1,Migraine,Aspirin
+0,0,0,1,Body Pain,Diclofenac
